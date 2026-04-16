@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Compound Lift Engine</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --accent: #00ff88;
+            --text: #ffffff;
+            --text-dim: #a0a0a0;
+            --error: #ff4444;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #ads-top, #ads-bottom {
+            width: 100%;
+            min-height: 90px;
+            background: rgba(255,255,255,0.03);
+            border: 1px dashed #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #444;
+            font-size: 12px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+
+        h1 { margin: 0 0 10px 0; font-size: 24px; color: var(--accent); }
+        p.desc { color: var(--text-dim); font-size: 14px; margin-bottom: 20px; }
+
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; color: var(--text-dim); }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: var(--accent);
+            color: black;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:hover { opacity: 0.9; }
+
+        .results { display: none; flex-direction: column; gap: 15px; margin-top: 10px; }
+
+        .main-res {
+            text-align: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 15px;
+        }
+
+        .main-res .val { font-size: 48px; font-weight: 800; color: var(--accent); }
+        .main-res .label { font-size: 12px; color: var(--text-dim); }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .perc-card {
+            background: #252525;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .perc-card .p-val { font-size: 20px; font-weight: bold; }
+        .perc-card .p-lab { font-size: 10px; color: var(--text-dim); margin-top: 5px; }
+
+        #error-msg { color: var(--error); font-size: 13px; display: none; margin-bottom: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="ads-top">AD REVENUE SLOT</div>
+
+    <div class="card">
+        <h1>The Compound Lift Engine</h1>
+        <p class="desc">Safety-first baseline tool. Stop the assessment set at <strong>slight form breakdown</strong>.</p>
+
+        <div id="error-msg"></div>
+
+        <div class="input-group">
+            <label>Lift Name</label>
+            <input type="text" id="liftName" placeholder="e.g. Back Squat">
+        </div>
+
+        <div class="input-group">
+            <label>Weight Used</label>
+            <input type="number" id="weight" placeholder="0" min="0">
+        </div>
+
+        <div class="input-group">
+            <label>Reps Completed</label>
+            <input type="number" id="reps" placeholder="0" min="1" max="20">
+        </div>
+
+        <button onclick="calculate()">CALCULATE BASELINE</button>
+    </div>
+
+    <div class="results" id="resultsBox">
+        <div class="card main-res">
+            <div class="label">ADJUSTED TECHNICAL MAX (0.95x)</div>
+            <div class="val" id="adjMax">0</div>
+        </div>
+
+        <div class="grid">
+            <div class="perc-card">
+                <div class="p-val" id="p65">0</div>
+                <div class="p-lab">65% LOAD</div>
+            </div>
+            <div class="perc-card">
+                <div class="p-val" id="p70">0</div>
+                <div class="p-lab">70% LOAD</div>
+            </div>
+            <div class="perc-card">
+                <div class="p-val" id="p75">0</div>
+                <div class="p-lab">75% LOAD</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="ads-bottom">AD REVENUE SLOT</div>
+</div>
+
+<script src="baseline.js"></script>
+<script>
+    function calculate() {
+        const weight = parseFloat(document.getElementById('weight').value);
+        const reps = parseInt(document.getElementById('reps').value);
+        const errorMsg = document.getElementById('error-msg');
+        const resultsBox = document.getElementById('resultsBox');
+
+        const result = calculateBaseline(weight, reps);
+
+        if (result.error) {
+            errorMsg.innerText = result.error;
+            errorMsg.style.display = "block";
+            resultsBox.style.display = "none";
+            return;
+        }
+
+        if (reps > 15) {
+            errorMsg.innerText = "Note: estimates above 15 reps are less precise. Aim for 6–12 reps for best accuracy.";
+            errorMsg.style.display = "block";
+        } else {
+            errorMsg.style.display = "none";
+        }
+
+        document.getElementById('adjMax').innerText = result.adjustedMax;
+        document.getElementById('p65').innerText = result.intensity_65;
+        document.getElementById('p70').innerText = result.intensity_70;
+        document.getElementById('p75').innerText = result.intensity_75;
+
+        resultsBox.style.display = "flex";
+    }
+</script>
+
+</body>
+</html>
